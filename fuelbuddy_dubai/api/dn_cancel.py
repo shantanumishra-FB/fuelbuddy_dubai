@@ -104,6 +104,10 @@ def cancel_batch(names: str = "", dry_run: int = 1) -> dict:
                 doc = frappe.get_doc("Delivery Note", name)
                 doc.flags.ignore_permissions = True
                 doc.cancel()
+                # fb_skip_billing_status also skips update_billing_percentage ->
+                # set_status, the only writer of the status field on cancel, so
+                # set it here (docstatus 2 is always status Cancelled).
+                doc.db_set("status", "Cancelled", update_modified=False)
                 frappe.db.commit()
                 cancelled.append(name)
             except Exception as exc:
